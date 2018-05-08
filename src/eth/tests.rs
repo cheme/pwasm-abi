@@ -29,9 +29,9 @@ fn bytes() {
 
 	let mut stream = Stream::new(&encoded);
 
-	let bytes: Vec<u8> = stream.pop().unwrap();
+	let bytes: Bytes = stream.pop().unwrap();
 
-	assert_eq!(vec![0x12u8, 0x34], bytes);
+	assert_eq!(vec![0x12u8, 0x34], bytes.0);
 }
 
 #[test]
@@ -47,11 +47,11 @@ fn two_bytes() {
 
 	let mut stream = Stream::new(&encoded);
 
-	let bytes1: Vec<u8> = stream.pop().unwrap();
-	let bytes2: Vec<u8> = stream.pop().unwrap();
+	let bytes1: Bytes = stream.pop().unwrap();
+	let bytes2: Bytes = stream.pop().unwrap();
 
-	assert_eq!(bytes1, "10000000000000000000000000000000000000000000000000000000000002".from_hex().unwrap());
-	assert_eq!(bytes2, "0010000000000000000000000000000000000000000000000000000000000002".from_hex().unwrap());
+	assert_eq!(bytes1.0, "10000000000000000000000000000000000000000000000000000000000002".from_hex().unwrap());
+	assert_eq!(bytes2.0, "0010000000000000000000000000000000000000000000000000000000000002".from_hex().unwrap());
 }
 
 fn double_decode<T1: super::AbiType, T2: super::AbiType>(payload: &[u8]) -> (T1, T2) {
@@ -91,7 +91,7 @@ fn u32_encode() {
 #[test]
 fn bytes_encode() {
 	assert_eq!(
-		single_encode(vec![0x12u8, 0x34]),
+		single_encode(Bytes(vec![0x12u8, 0x34])),
 		("".to_owned() +
 		"0000000000000000000000000000000000000000000000000000000000000020" +
 		"0000000000000000000000000000000000000000000000000000000000000002" +
@@ -141,9 +141,9 @@ fn sample2_decode() {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,
 	];
 
-	let (v1, v2, v3) = triple_decode::<Vec<u8>, bool, Vec<U256>>(&sample);
+	let (v1, v2, v3) = triple_decode::<Bytes, bool, Vec<U256>>(&sample);
 
-	assert_eq!(v1, vec![100, 97, 118, 101]);
+	assert_eq!(v1.0, vec![100, 97, 118, 101]);
 	assert_eq!(v2, true);
 	assert_eq!(v3, vec![U256::from(1), U256::from(2), U256::from(3)]);
 }

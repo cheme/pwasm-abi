@@ -14,11 +14,17 @@ pub use self::log::AsLog;
 pub use self::stream::Stream;
 pub use self::sink::Sink;
 
+pub struct Bytes(pub ::lib::Vec<u8>);
+
 /// Error for decoding rust types from stream
 #[derive(Debug, PartialEq, Eq)]
 pub enum Error {
 	/// Invalid bool for provided input
 	InvalidBool,
+	/// Invalid u32 for provided input
+	InvalidU8,
+	/// Invalid u32 for provided input
+	InvalidU16,
 	/// Invalid u32 for provided input
 	InvalidU32,
 	/// Invalid u64 for provided input

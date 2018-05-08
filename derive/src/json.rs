@@ -113,7 +113,7 @@ impl<'a> From<&'a items::Signature> for FunctionEntry {
                     }
                 )
                 .collect(),
-            outputs: item.return_type
+            outputs: item.return_types
                 .iter()
                 .map(|ty| Argument { name: "returnValue".to_owned(), type_: utils::canonical_ty(ty) })
                 .collect(),
@@ -127,3 +127,4 @@ impl From<FunctionEntry> for ConstructorEntry {
         ConstructorEntry { arguments: func.arguments }
     }
 }
+

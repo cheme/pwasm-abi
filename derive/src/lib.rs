@@ -109,6 +109,7 @@ pub fn eth_abi(args: TokenStream, input: TokenStream) -> TokenStream {
 			panic!("eth_abi marco takes one or two comma-separated arguments, passed {}", len);
 		}
 	}
+
 }
 
 fn write_json_abi(intf: &items::Interface) {
@@ -153,6 +154,12 @@ fn generate_eth_client(client_name: &str, intf: &items::Interface) -> quote::Tok
 					syn::FunctionRetTy::Default => quote!{
 						let mut result = Vec::new();
 					},
+		      syn::FunctionRetTy::Ty(syn::Ty::Tup(ref tys)) => {
+            let result_len = tys.len() * 32;
+            quote!{
+  						let mut result = [0u8; #result_len];
+            }
+          },
 					syn::FunctionRetTy::Ty(_) => quote!{
 						let mut result = [0u8; 32];
 					},
@@ -160,6 +167,14 @@ fn generate_eth_client(client_name: &str, intf: &items::Interface) -> quote::Tok
 
 				let result_pop = match signature.method_sig.decl.output {
 					syn::FunctionRetTy::Default => None,
+		      syn::FunctionRetTy::Ty(syn::Ty::Tup(ref result_types)) => {
+            Some(quote!{
+						  let mut stream = pwasm_abi::eth::Stream::new(&result);
+              (
+                #( stream.pop::<#result_types>().expect("failed decode call output") ),*
+              )
+					  })
+          },
 					syn::FunctionRetTy::Ty(_) => Some(quote!{
 						let mut stream = pwasm_abi::eth::Stream::new(&result);
 						stream.pop().expect("failed decode call output")
@@ -270,7 +285,23 @@ fn generate_eth_endpoint(endpoint_name: &str, intf: &items::Interface) -> quote:
 				let ident = &signature.name;
 				let arg_types = signature.arguments.iter().map(|&(_, ref ty)| quote! { #ty });
 				let check_value_if_payable = if signature.is_payable { quote! {} } else { quote! {#check_value_code} };
-				if let Some(_) = signature.return_type {
+        let return_types_len = signature.return_types.len();
+				if return_types_len > 1 {
+          let return_types_it : Vec<_> = (0..return_types_len).into_iter()
+            .map(|i|syn::Ident::new(i.to_string())).collect();
+					Some(quote! {
+						#hash_literal => {
+							#check_value_if_payable
+							let mut stream = pwasm_abi::eth::Stream::new(method_payload);
+							let result = inner.#ident(
+								#(stream.pop::<#arg_types>().expect("argument decoding failed")),*
+							);
+							let mut sink = pwasm_abi::eth::Sink::new(#return_types_len);
+							#( sink.push(result.#return_types_it); )*
+							sink.finalize_panicking()
+						}
+					})
+				} else if return_types_len == 1 {
 					Some(quote! {
 						#hash_literal => {
 							#check_value_if_payable
@@ -357,3 +388,5 @@ fn generate_eth_endpoint(endpoint_name: &str, intf: &items::Interface) -> quote:
 		}
 	}
 }
+
+

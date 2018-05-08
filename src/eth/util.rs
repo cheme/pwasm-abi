@@ -4,6 +4,20 @@ use lib::*;
 
 pub type Hash = [u8; 32];
 
+/// Converts u16 to right aligned array of 32 bytes.
+pub fn pad_u8(value: u8) -> Hash {
+	let mut padded = [0u8; 32];
+	padded[31] = value as u8;
+	padded
+}
+
+/// Converts u16 to right aligned array of 32 bytes.
+pub fn pad_u16(value: u16) -> Hash {
+	let mut padded = [0u8; 32];
+	padded[30] = (value >> 8) as u8;
+	padded[31] = value as u8;
+	padded
+}
 /// Converts u32 to right aligned array of 32 bytes.
 pub fn pad_u32(value: u32) -> Hash {
 	let mut padded = [0u8; 32];

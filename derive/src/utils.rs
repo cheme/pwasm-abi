@@ -73,6 +73,8 @@ pub fn push_canonical(target: &mut String, ty: &syn::Ty) {
 		syn::Ty::Path(None, ref path) => {
 			let last_path = path.segments.last().unwrap();
 			match last_path.ident.to_string().as_ref() {
+				"u8" => target.push_str("uint8"),
+				"u16" => target.push_str("uint32"),
 				"u32" => target.push_str("uint32"),
 				"i32" => target.push_str("int32"),
 				"u64" => target.push_str("uint64"),
@@ -80,16 +82,17 @@ pub fn push_canonical(target: &mut String, ty: &syn::Ty) {
 				"U256" => target.push_str("uint256"),
 				"H256" => target.push_str("uint256"),
 				"Address" => target.push_str("address"),
+				"Bytes" => target.push_str("bytes"),
 				"Vec" => {
 					match last_path.parameters {
 						syn::PathParameters::AngleBracketed(ref param_data) => {
 							let vec_arg = param_data.types.last().unwrap();
-							if let syn::Ty::Path(None, ref nested_path) = *vec_arg {
+							/*if let syn::Ty::Path(None, ref nested_path) = *vec_arg {
 								if "u8" == nested_path.segments.last().unwrap().ident.to_string() {
 									target.push_str("bytes");
 									return;
 								}
-							}
+							}*/
 							push_canonical(target, vec_arg);
 							target.push_str("[]")
 						},
@@ -148,3 +151,5 @@ pub fn hash(s: &str) -> u32 {
 	let keccak = keccak(s);
 	BigEndian::read_u32(&keccak.as_ref()[0..4])
 }
+
+
